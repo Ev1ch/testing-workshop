@@ -8,16 +8,14 @@ import type { ThunkApiConfig } from "store/types";
 
 import type { User } from "../types";
 import type { SignInData } from "../contracts";
+import { signIn as apiSignIn } from "../api";
 import initialState from "./state";
 
 const name = "auth";
 
 export const signIn = createAsyncThunk<User, SignInData, ThunkApiConfig>(
   `${name}/signIn`,
-  (data) =>
-    new Promise((resolve) => {
-      setTimeout(() => resolve({ firstName: "", lastName: "" }), 1000);
-    })
+  apiSignIn
 );
 
 const slice = createSlice({
