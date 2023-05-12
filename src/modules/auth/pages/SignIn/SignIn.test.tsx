@@ -1,48 +1,61 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import path from "path";
-import url from "url";
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-import { mockImport, getRandomUser } from "@tests/utils";
+import { getRandomCredentials } from '@tests/utils';
 
-import { useAuth } from "../../hooks";
-import { EMPTY_SIGN_IN_DATA } from "../../constants";
-import SignIn from "./SignIn";
+import type { SignInData } from '../../contracts';
+import type { User } from '../../types';
+import { type UseAuthReturn, useAuth } from '../../hooks';
+import { EMPTY_SIGN_IN_DATA } from '../../constants';
+import SignIn from './SignIn';
 
-// const FILENAME = path.dirname(url.fileURLToPath(import.meta.url));
-const RANDOM_USER = getRandomUser();
-const MOCKED_USE_AUTH_RETURN = { user: null, signIn: jest.fn() };
+const user = userEvent.setup();
 
-jest.mock("../../hooks", () => {
-  const originalModule = jest.requireActual("../../hooks");
+const MOCKED_USE_AUTH = useAuth as jest.Mock<UseAuthReturn, [void]>;
+jest.mock('../../hooks', () => {
+  const originalModule = jest.requireActual('../../hooks');
 
   return {
     __esModule: true,
     ...originalModule,
-    useAuth: jest.fn(() => MOCKED_USE_AUTH_RETURN),
+    useAuth: jest.fn<UseAuthReturn, [void]>(),
   };
 });
 
-// mockImport(path.resolve(FILENAME, "../../hooks"), {
-//   useAuth: jest.fn(() => MOCKED_USE_AUTH_RETURN),
-// });
+describe('SignIn', () => {
+  beforeEach(() => {
+    MOCKED_USE_AUTH.mockClear();
+  });
 
-describe("SignIn", () => {
-  it("rendered component should be in document", () => {
-    MOCKED_USE_AUTH_RETURN.signIn.mockReturnValueOnce(
-      new Promise((resolve) => {
-        {
-          MOCKED_USE_AUTH_RETURN.user = RANDOM_USER;
-          resolve(RANDOM_USER);
-        }
-      })
-    );
+  it('should call signIn with empty data', async () => {
+    const mockedSignIn = jest.fn<Promise<User>, [SignInData]>();
+    MOCKED_USE_AUTH.mockReturnValue({
+      user: null,
+      signIn: mockedSignIn,
+    });
     render(<SignIn />);
 
-    userEvent.click(screen.getByRole("button"));
+    await user.click(screen.getByRole('button', { name: /submit/i }));
 
-    const signInCalls = MOCKED_USE_AUTH_RETURN.signIn.mock.calls;
-    expect(signInCalls).toHaveLength(1);
-    expect(signInCalls[0][0]).toEqual(EMPTY_SIGN_IN_DATA);
+    expect(mockedSignIn).toHaveBeenLastCalledWith(EMPTY_SIGN_IN_DATA);
+  });
+
+  it('should call signIn with correct data', async () => {
+    const data: SignInData = getRandomCredentials();
+    const mockedSignIn = jest.fn<Promise<User>, [SignInData]>();
+    MOCKED_USE_AUTH.mockReturnValue({
+      user: null,
+      signIn: mockedSignIn,
+    });
+    render(<SignIn />);
+
+    await user.type(
+      screen.getByRole('textbox', { name: /email/i }),
+      data.email,
+    );
+    await user.type(screen.getByLabelText(/password/i), data.password);
+    await user.click(screen.getByRole('button', { name: /submit/i }));
+
+    expect(mockedSignIn).toHaveBeenLastCalledWith(data);
   });
 });
