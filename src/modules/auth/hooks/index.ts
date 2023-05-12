@@ -1,1 +1,1 @@
-export { default as useAuth } from './useAuth';
+export { default as useAuth, type UseAuth, type UseAuthReturn } from './useAuth';
