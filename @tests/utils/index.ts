@@ -1,2 +1,2 @@
-export {default as getRandomUser} from './getRandomUser';
-export {default as mockImport} from './mockImport';
+export { default as getRandomCredentials } from './getRandomCredentials';
+export { default as getRandomUser } from './getRandomUser';
